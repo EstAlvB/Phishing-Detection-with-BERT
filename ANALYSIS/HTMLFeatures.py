@@ -1,3 +1,4 @@
+import re
 from string import punctuation
 from pyquery import PyQuery
 from numpy import log
@@ -76,9 +77,13 @@ class HTMLFeatures:
         """Total number of embed tags on page"""
         return len(self.pq('embed'))
 
-    def number_of_hyperlinks(self):
-        """Total number of hyperlinks"""
-        return len(self.pq('a'))
+    def number_of_internal_hyperlinks(self):
+        """Total number of internal hyperlinks"""
+        return len(self.pq.find('a[href^="/"]'))
+
+    def number_of_external_hyperlinks(self):
+        """Total number of external hyperlinks"""
+        return len(self.pq.find('a[href^="http"]'))
 
     def number_of_whitespace(self):
         """Total number of whitespaces in page content"""
@@ -95,8 +100,12 @@ class HTMLFeatures:
 
     def number_of_double_documents(self):
         """Total number of HTML structural tags (body, html, head) that are repeated"""
-        tags = self.pq('html') + self.pq('body') + self.pq('title')
-        return len(tags) if len(tags) != 3 else 0
+        count = 0
+        x, y, z = self.pq('html'), self.pq('body'), self.pq('head')
+        count += len(x)-1 if len(x)>0 else 0
+        count += len(y)-1 if len(y)>0 else 0
+        count += len(z)-1 if len(z)>0 else 0
+        return count
 
     def average_script_length(self):
         """Average length of all script tag contents"""
@@ -123,6 +132,54 @@ class HTMLFeatures:
         script_content = self.pq('script').text().lower()
         susf = [1 if i in script_content else 0 for i in self.suspicious_functions]
         return sum(susf)
+
+    def keywords_to_words_ratio(self):
+        """ 
+        Ratio between the number of keywords (i.e., reserved words) and other
+        strings occurring in a piece of JavaScript code.
+        """
+        script = self.pq('script').text()
+        keywords = ["var", "const", "let", "for", "while", "if", "return"]
+        kw, t = 0, 0
+
+        words = re.split(r'\s+|\W', script)
+        for word in words:
+            if word and word!='':
+                t += 1
+                if word in keywords:
+                    kw += 1
+        return round(kw/t, 3) if t>0 else 0
+
+    def number_of_dom_modifying_functions(self):
+        """
+        Counts the number of functions used to modify the Document Object Model
+        that are referenced in the source code.
+        """
+        regex_dom_functions = [
+            r'createElement\s*\(',
+            r'appendChild\s*\(',
+            r'removeChild\s*\(',
+            r'replaceChild\s*\(',
+            r'insertBefore\s*\(',
+            r'getElementsByClassName\s*\(',
+            r'getElementsByTagName\s*\(',
+            r'getElementById\s*\(',
+            r'querySelector\s*\(',
+            r'querySelectorAll\s*\(',
+            r'setAttribute\s*\(',
+            r'getAttribute\s*\(',
+            r'removeAttribute\s*\(',
+            r'clearAttributes\s*\(',
+            r'insertAdjacentElement\s*\(',
+            r'replaceNode\s*\(',
+        ]
+
+        count_dom_functions = sum(
+            len(re.findall(regex, self.pq('script').text()))
+            for regex in regex_dom_functions
+        )
+
+        return count_dom_functions
 
     def has_right_click_disabled(self):
         """

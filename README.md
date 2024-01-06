@@ -11,6 +11,6 @@ Phishing has become one of the most used and dangerous cyber-attacks today. Ever
 For more information, visit the following links were the finetuned model and the dataset used
 in this project are provided:
 
-- [BERT finetuned for phishing detection](https://huggingface.co/ealvaradob/bert-large-finetuned-phishing)
+- [BERT finetuned for phishing detection](https://huggingface.co/ealvaradob/bert-finetuned-phishing)
 
 - [Phishing dataset](https://huggingface.co/datasets/ealvaradob/phishing-dataset)

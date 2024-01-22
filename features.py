@@ -2,6 +2,7 @@
 Module to extract relevant features from:
 - HTML
 - URL
+- TEXT
 """
 
 import re
